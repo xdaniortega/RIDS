@@ -20,7 +20,6 @@
 // SOFTWARE.
 //cmake ../hypervisor/ -DDEFAULT_VMM=lids
 
-
 #include <vmm.h>
 #include <iomanip>
 #include <string>
@@ -29,149 +28,192 @@
 #include <iostream>
 #include <fstream>
 
-
-using phys_addr_t = uintptr_t;                      ///< Phys Address Type (as Int)
-using virt_addr_t = uintptr_t;  
-using namespace bfvmm::x64::cr3;                  ///< Virt Address Type (as Ptr)
+using phys_addr_t = uintptr_t; ///< Phys Address Type (as Int)
+using virt_addr_t = uintptr_t;
+using namespace bfvmm::x64::cr3; ///< Virt Address Type (as Ptr)
 using namespace bfvmm::x64;
 
-using size_type = size_t;                           ///< Size Type
-using entry_type = uintptr_t;                       ///< Entry Type
-using index_type = std::ptrdiff_t; 
+using size_type = size_t;     ///< Size Type
+using entry_type = uintptr_t; ///< Entry Type
+using index_type = std::ptrdiff_t;
 
 std::vector<entry_type> ESKernel;
+bool allowWalk = true; //in near future will be an object with the entire state
 
-
-void
-global_init()
+void global_init()
 {
     bfdebug_info(0, "running LIDS example");
     bfdebug_lnbr(0);
-    
 }
-const char* hex_char_to_bin(char c)
+const char *hex_char_to_bin(char c)
 {
     // TODO handle default / error
-    switch(toupper(c))
+    switch (toupper(c))
     {
-        case '0': return "0000";
-        case '1': return "0001";
-        case '2': return "0010";
-        case '3': return "0011";
-        case '4': return "0100";
-        case '5': return "0101";
-        case '6': return "0110";
-        case '7': return "0111";
-        case '8': return "1000";
-        case '9': return "1001";
-        case 'A': return "1010";
-        case 'B': return "1011";
-        case 'C': return "1100";
-        case 'D': return "1101";
-        case 'E': return "1110";
-        case 'F': return "1111";
+    case '0':
+        return "0000";
+    case '1':
+        return "0001";
+    case '2':
+        return "0010";
+    case '3':
+        return "0011";
+    case '4':
+        return "0100";
+    case '5':
+        return "0101";
+    case '6':
+        return "0110";
+    case '7':
+        return "0111";
+    case '8':
+        return "1000";
+    case '9':
+        return "1001";
+    case 'A':
+        return "1010";
+    case 'B':
+        return "1011";
+    case 'C':
+        return "1100";
+    case 'D':
+        return "1101";
+    case 'E':
+        return "1110";
+    case 'F':
+        return "1111";
     }
 }
 
-std::string hex_str_to_bin_str(const std::string& hex)
+std::string hex_str_to_bin_str(const std::string &hex)
 {
     // TODO use a loop from <algorithm> or smth
     std::string bin;
-    for(unsigned i = 0; i != hex.length(); ++i)
-       bin += hex_char_to_bin(hex[i]);
+    for (unsigned i = 0; i != hex.length(); ++i)
+        bin += hex_char_to_bin(hex[i]);
     return bin;
 }
-//to convert from phys to virt currentVirtAdress = g_mm->physint_to_virtint(cr3PhysicalAddr);  
-void printPTE(entry_type entryOfMap_){
-    bfdebug_info(0,"------------------PAGE TABLE ENTRY OF MAP (PTE)---------------------------");
-    
+//to convert from phys to virt currentVirtAdress = g_mm->physint_to_virtint(cr3PhysicalAddr);
+void printPTE(entry_type entryOfMap_)
+{
+    bfdebug_info(0, "------------------PAGE TABLE ENTRY OF MAP (PTE)---------------------------");
+
     bool present = x64::pt::entry::present::is_enabled(entryOfMap_);
     bool us = x64::pt::entry::us::is_enabled(entryOfMap_);
     bool rw = x64::pt::entry::rw::is_enabled(entryOfMap_);
     bool pwt = x64::pt::entry::pwt::is_enabled(entryOfMap_);
 
-    
     bool pcd = x64::pt::entry::pcd::is_enabled(entryOfMap_);
     bool accessed = x64::pt::entry::accessed::is_enabled(entryOfMap_);
     bool dirty = x64::pt::entry::dirty::is_enabled(entryOfMap_);
     bool g = x64::pt::entry::g::is_enabled(entryOfMap_);
 
-
-    
-    bfdebug_info(0,"                -permissions-");
-    if(present){
-        bfdebug_info(0,"PRESENT IN PHYSICAL MEMORY");
-    }else{
-        bfdebug_info(0,"PAGE FAULT(NOT PRESENT)");       
+    bfdebug_info(0, "                -permissions-");
+    if (present)
+    {
+        bfdebug_info(0, "PRESENT IN PHYSICAL MEMORY");
     }
-    if(rw){
-         bfdebug_info(0,"READ/WRITE");
-    }else{
-        bfdebug_info(0,"READ ONLY");
+    else
+    {
+        bfdebug_info(0, "PAGE FAULT(NOT PRESENT)");
     }
-    if(us){
-        bfdebug_info(0,"USER PAGE");
-    }else{
-        bfdebug_info(0,"SUPERVISOR PAGE");
+    if (rw)
+    {
+        bfdebug_info(0, "READ/WRITE");
     }
-    if(pwt){
-           bfdebug_info(0,"WRITE-THROUGH POLICY");
-    }else{
-        bfdebug_info(0,"WRITE-BACK POLICY");
+    else
+    {
+        bfdebug_info(0, "READ ONLY");
     }
-    if(pcd){
-        bfdebug_info(0,"CACHE DISABLED (WON'T BE CACHED)");
-    }else{
-        bfdebug_info(0,"CACHE ENABLED");
+    if (us)
+    {
+        bfdebug_info(0, "USER PAGE");
     }
-    if(accessed){
-        bfdebug_info(0,"ACCESSED (read/write)");
-    }else{
-        bfdebug_info(0,"NOT ACCESSED");
+    else
+    {
+        bfdebug_info(0, "SUPERVISOR PAGE");
     }
-    if(dirty){
-        bfdebug_info(0,"DIRTY (has been written)");
-    }else{
-        bfdebug_info(0,"NOT DIRTY");
+    if (pwt)
+    {
+        bfdebug_info(0, "WRITE-THROUGH POLICY");
     }
-    if(g){
-        bfdebug_info(0,"GLOBAL (CR4)");
-    }else{
-        bfdebug_info(0,"NOT GLOBAL");
+    else
+    {
+        bfdebug_info(0, "WRITE-BACK POLICY");
     }
-
+    if (pcd)
+    {
+        bfdebug_info(0, "CACHE DISABLED (WON'T BE CACHED)");
+    }
+    else
+    {
+        bfdebug_info(0, "CACHE ENABLED");
+    }
+    if (accessed)
+    {
+        bfdebug_info(0, "ACCESSED (read/write)");
+    }
+    else
+    {
+        bfdebug_info(0, "NOT ACCESSED");
+    }
+    if (dirty)
+    {
+        bfdebug_info(0, "DIRTY (has been written)");
+    }
+    else
+    {
+        bfdebug_info(0, "NOT DIRTY");
+    }
+    if (g)
+    {
+        bfdebug_info(0, "GLOBAL (CR4)");
+    }
+    else
+    {
+        bfdebug_info(0, "NOT GLOBAL");
+    }
 }
 
-void listESKernelCode(uint64_t entry_){
+void listESKernelCode(uint64_t entry_)
+{
 
     bool us = x64::pt::entry::us::is_enabled(entry_); //check for kernel supervisor
     bool rw = x64::pt::entry::rw::is_enabled(entry_); // is RO
     bool xd = x64::pt::entry::xd::is_enabled(entry_); //only exectuable
-    if(!rw && !us && !xd){
+    if (!rw && !us && !xd)
+    {
         ESKernel.push_back(entry_);
     }
     std::clog << std::hex << entry_ << " PTE ";
-    if(rw){
-         std::clog << " R/W ";
-    }else{
+    if (rw)
+    {
+        std::clog << " R/W ";
+    }
+    else
+    {
         std::clog << " RO ";
     }
-    if(us){
+    if (us)
+    {
         std::clog << " US ";
-    }else{
+    }
+    else
+    {
         std::clog << " S ";
     }
-    if(xd){
+    if (xd)
+    {
         std::clog << " X ";
-    }else{
-        std::clog << " NX " ;
+    }
+    else
+    {
+        std::clog << " NX ";
     }
 
-    std::clog <<"\n";
+    std::clog << "\n";
 }
-
-void
-vcpu_init_nonroot(vcpu_t *vcpu)
+void walkPT()
 {
     //bfignored(vcpu);
     bfdebug_info(0, "Init CR3 walkthrough: ");
@@ -179,27 +221,22 @@ vcpu_init_nonroot(vcpu_t *vcpu)
     entry_type entryOfMap;
     virt_addr_t pgdPointer;
 
-
-//    constexpr const auto KERNEL_START = 0xFFFF800000000000;
+    //    constexpr const auto KERNEL_START = 0xFFFF800000000000;
     uint64_t KERNEL_START = 0xFFFF800000000000;
     uint64_t KERNEL_FINSH = 0xFFFFc87fffffffff;
-   //auto KERNEL_START = 0x1000800000000000;
-    mmap* cr3Mmap = vmm_cr3();
+    //auto KERNEL_START = 0x1000800000000000;
+    mmap *cr3Mmap = vmm_cr3();
     uintptr_t cr3PhysicalAddr = cr3Mmap->cr3();
     uint64_t cr3_Phys = reinterpret_cast<uint64_t>(cr3PhysicalAddr);
     auto cr3MmapPhys = g_cr3;
     virt_addr_t cr3VirtAdress = g_mm->physint_to_virtint(cr3PhysicalAddr);
-    long counter=0;
+    long counter = 0;
 
-
-    bool found=false;
-    bfdebug_info(0,"------------------CR3 ---------------------------");
-    bfdebug_nhex(0,"PHYSICAL ADDRESS:", cr3PhysicalAddr);
-    bfdebug_nhex(0,"LINEAR ADDRESS:", cr3VirtAdress);
+    bool found = false;
+    bfdebug_info(0, "------------------CR3 ---------------------------");
+    bfdebug_nhex(0, "PHYSICAL ADDRESS:", cr3PhysicalAddr);
+    bfdebug_nhex(0, "LINEAR ADDRESS:", cr3VirtAdress);
     //auto dest = (cr3VirtAdress>>12) & 0xFFFFFFFFF; //Cogera a partir de los 12 ultimos bits, i aplicara una mascara hasta los 51
-
-
-
 
     //CR3 stores phys direction where pgd is
     //but now always are equivalent:
@@ -209,59 +246,55 @@ vcpu_init_nonroot(vcpu_t *vcpu)
     //The translation process is performed by a function called __phys_addr which you can refer to to follow the following examples.
     //Source: https://stackoverflow.com/questions/54973030/difference-between-cr3-value-and-pgd-t
 
-   
-
     //while(counter<1000){
-        bfdebug_info(0,"--------------------START--------------------");
-        bfdebug_nhex(0,"START_KERNEL Linear Address:", KERNEL_START );  
+    bfdebug_info(0, "--------------------START--------------------");
+    bfdebug_nhex(0, "START_KERNEL Linear Address:", KERNEL_START);
 
-        std::vector<uint64_t> pa_PML4s;
-        std::vector<uint64_t> pa_pdptes;
-        std::vector<uint64_t> pa_pds;
-        std::vector<uint64_t> pa_ptes;
+    std::vector<uint64_t> pa_PML4s;
+    std::vector<uint64_t> pa_pdptes;
+    std::vector<uint64_t> pa_pds;
+    std::vector<uint64_t> pa_ptes;
 
-
-        //phys_addr_t pa_pml4e = (cr3PhysicalAddr & 0xFFFFFFFFFF000) + ((KERNEL_START >> 39) & 0x1FF); //Where 1FF is 9 bits (47:39)
-        //acces content of phys to get virt
-       // std::fstream pml4_file;
-        //pml4_file.open("/home/daniel/Desktop/Bareflank_LIDS/pml4Dump.txt");
-        /*if(!pml4_file){
+    //phys_addr_t pa_pml4e = (cr3PhysicalAddr & 0xFFFFFFFFFF000) + ((KERNEL_START >> 39) & 0x1FF); //Where 1FF is 9 bits (47:39)
+    //acces content of phys to get virt
+    // std::fstream pml4_file;
+    //pml4_file.open("/home/daniel/Desktop/Bareflank_LIDS/pml4Dump.txt");
+    /*if(!pml4_file){
             std::clog<<"FILE NOT CREATED";
         }*/
-        std::clog<<"-----------------------------PML4------------------------------ \n";
+    std::clog << "-----------------------------PML4------------------------------ \n";
 
-        uint64_t pa_pml4 = cr3PhysicalAddr;
-        uint64_t* virtPml4 = reinterpret_cast<uint64_t*>(cr3Mmap->cr3Virt().data()); //casteo a puntero
-        //int PML4i = x64::pml4::index(virtPml4); //same as mask ((KERNEL_START >> 39) & 0x1FF);
-        int PML4i=  x64::pml4::index(KERNEL_START);
-        //uint64_t pa_pml4e;
+    uint64_t pa_pml4 = cr3PhysicalAddr;
+    uint64_t *virtPml4 = reinterpret_cast<uint64_t *>(cr3Mmap->cr3Virt().data()); //casteo a puntero
+    //int PML4i = x64::pml4::index(virtPml4); //same as mask ((KERNEL_START >> 39) & 0x1FF);
+    int PML4i = x64::pml4::index(KERNEL_START);
+    //uint64_t pa_pml4e;
 
-        for(int i=0;i<x64::pml4::num_entries;i++){
-            uint64_t pml4E = virtPml4[i];
-            if(PML4i==i){
-                //pa_pml4e=pml4E;
-               //pml4_file << "KERNEL Virt PML4e " <<std::dec << i;
-                std::clog << "KERNEL INDEX ";
+    for (int i = 0; i < x64::pml4::num_entries; i++)
+    {
+        uint64_t pml4E = virtPml4[i];
+        if (PML4i == i)
+        {
+            //pa_pml4e=pml4E;
+            //pml4_file << "KERNEL Virt PML4e " <<std::dec << i;
+            std::clog << "KERNEL INDEX ";
 
-
-            }/*else{
+        } /*else{
                 //pml4_file << "Virt PML4e "  <<std::dec << i;
                 std::clog << "Virt PML4e "  <<std::dec << i;
             }*/
-            //pml4_file << std::hex <<  ": 0x" << pml4E << "\n";
+        //pml4_file << std::hex <<  ": 0x" << pml4E << "\n";
 
-
-            if(pml4E!=0){ //this condition is only for testing, it should be the same as the PML4i
-                pa_PML4s.push_back(pml4E);
-                std::clog << "Virt PML4e "  <<std::dec << i;
-                std::clog << std::hex <<  ": 0x" << pml4E << "\n";
-
-            }
-
+        if (pml4E != 0)
+        { //this condition is only for testing, it should be the same as the PML4i
+            pa_PML4s.push_back(pml4E);
+            std::clog << "Virt PML4e " << std::dec << i;
+            std::clog << std::hex << ": 0x" << pml4E << "\n";
         }
-        
-        //pml4_file << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
-        std::clog << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
+    }
+
+    //pml4_file << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
+    /*std::clog << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
 
         std::clog<<"-----------------------------PDPT------------------------------ \n";
         //pml4_file.close();//make dump>
@@ -279,7 +312,7 @@ vcpu_init_nonroot(vcpu_t *vcpu)
 
                 }/*else{
                     std::clog << "Virt PDPTe "  <<std::dec << i;
-                }*/
+                }
                 std::clog << std::hex <<  ": 0x" << PDPTe << "\n";
                 if(PDPTe!=0){
                     pa_pdptes.push_back(PDPTe);
@@ -307,7 +340,7 @@ vcpu_init_nonroot(vcpu_t *vcpu)
                 }
                 /*}else{
                     std::clog << "Virt PDe "  <<std::dec << i;
-                }*/
+                }
                 if(PDe!=0){
                     pa_pds.push_back(PDe);
                     std::clog << "Virt PDe "  <<std::dec << i;
@@ -331,7 +364,7 @@ vcpu_init_nonroot(vcpu_t *vcpu)
                     std::clog << "KERNEL INDEX: ";
                 }/*else{
                     std::clog << "Virt PTe "  <<std::dec << i;
-                }*/
+                }
                 if(PTe!=0){
                     pa_ptes.push_back(PTe);
                     std::clog << "Virt PDe "  <<std::dec << i;
@@ -370,8 +403,18 @@ vcpu_init_nonroot(vcpu_t *vcpu)
 
      */
 }
+void vcpu_init_nonroot(vcpu_t *vcpu)
+{
+    vcpu->dump("Thats the state dump");
+    int i = 0;
 
-
-
-        
-  
+    while (allowWalk)
+    {
+        if (i == 1)
+        {
+            allowWalk = false;
+        }
+        walkPT();
+        i++;
+    }
+}
