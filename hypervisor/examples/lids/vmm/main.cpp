@@ -213,40 +213,27 @@ void listESKernelCode(uint64_t entry_)
 
     std::clog << "\n";
 }
-void walkPT()
+void walkPT(vcpu_t *vcpu)
 {
     //bfignored(vcpu);
     bfdebug_info(0, "Init CR3 walkthrough: ");
 
-    entry_type entryOfMap;
-    virt_addr_t pgdPointer;
-
-    //    constexpr const auto KERNEL_START = 0xFFFF800000000000;
     uint64_t KERNEL_START = 0xFFFF800000000000;
     uint64_t KERNEL_FINSH = 0xFFFFc87fffffffff;
-    //auto KERNEL_START = 0x1000800000000000;
-    mmap *cr3Mmap = vmm_cr3();
-    uintptr_t cr3PhysicalAddr = cr3Mmap->cr3();
+
+    //mmap *cr3Mmap = vmm_cr3();
+    //uintptr_t cr3PhysicalAddr = cr3Mmap->cr3();
+    uintptr_t cr3PhysicalAddr = vcpu->cr3();
     uint64_t cr3_Phys = reinterpret_cast<uint64_t>(cr3PhysicalAddr);
     auto cr3MmapPhys = g_cr3;
     virt_addr_t cr3VirtAdress = g_mm->physint_to_virtint(cr3PhysicalAddr);
-    long counter = 0;
 
-    bool found = false;
+ 
+
     bfdebug_info(0, "------------------CR3 ---------------------------");
     bfdebug_nhex(0, "PHYSICAL ADDRESS:", cr3PhysicalAddr);
     bfdebug_nhex(0, "LINEAR ADDRESS:", cr3VirtAdress);
-    //auto dest = (cr3VirtAdress>>12) & 0xFFFFFFFFF; //Cogera a partir de los 12 ultimos bits, i aplicara una mascara hasta los 51
 
-    //CR3 stores phys direction where pgd is
-    //but now always are equivalent:
-    //At least since Linux 2.6, pgd and cr3 may or may not be equivalent depending on two factors:
-    //Whether pgd is larger than the virtual base address of the kernel image __START_KERNEL_map.
-    //phys_base, which is the difference between the compile-time physical base address of the kernel image and the run-time physical base address of the image. If the image has been relocated, phys_base would not be zero.
-    //The translation process is performed by a function called __phys_addr which you can refer to to follow the following examples.
-    //Source: https://stackoverflow.com/questions/54973030/difference-between-cr3-value-and-pgd-t
-
-    //while(counter<1000){
     bfdebug_info(0, "--------------------START--------------------");
     bfdebug_nhex(0, "START_KERNEL Linear Address:", KERNEL_START);
 
@@ -255,21 +242,30 @@ void walkPT()
     std::vector<uint64_t> pa_pds;
     std::vector<uint64_t> pa_ptes;
 
-    //phys_addr_t pa_pml4e = (cr3PhysicalAddr & 0xFFFFFFFFFF000) + ((KERNEL_START >> 39) & 0x1FF); //Where 1FF is 9 bits (47:39)
-    //acces content of phys to get virt
-    // std::fstream pml4_file;
-    //pml4_file.open("/home/daniel/Desktop/Bareflank_LIDS/pml4Dump.txt");
-    /*if(!pml4_file){
-            std::clog<<"FILE NOT CREATED";
-        }*/
     std::clog << "-----------------------------PML4------------------------------ \n";
 
     uint64_t pa_pml4 = cr3PhysicalAddr;
-    uint64_t *virtPml4 = reinterpret_cast<uint64_t *>(cr3Mmap->cr3Virt().data()); //casteo a puntero
-    //int PML4i = x64::pml4::index(virtPml4); //same as mask ((KERNEL_START >> 39) & 0x1FF);
+    uint64_t *virtPml4 = reinterpret_cast<uint64_t *>(cr3VirtAdress);
     int PML4i = x64::pml4::index(KERNEL_START);
-    //uint64_t pa_pml4e;
 
+    for (int i = 0; i < x64::pml4::num_entries; i++)
+    {
+        uint64_t pml4E = virtPml4[i];
+        if (PML4i == i)
+        {
+            std::clog << "KERNEL Entry " << std::dec << i;
+            std::clog << std::hex << ": 0x" << pml4E << "\n";
+            pa_PML4s.push_back(pml4E);
+
+        }
+
+        if (pml4E != 0)
+        { //this condition shows other non empty entries
+            std::clog << "Virt PML4e " << std::dec << i;
+            std::clog << std::hex << ": 0x" << pml4E << "\n";
+        }
+    }
+/*
     for (int i = 0; i < x64::pml4::num_entries; i++)
     {
         uint64_t pml4E = virtPml4[i];
@@ -282,7 +278,7 @@ void walkPT()
         } /*else{
                 //pml4_file << "Virt PML4e "  <<std::dec << i;
                 std::clog << "Virt PML4e "  <<std::dec << i;
-            }*/
+            }
         //pml4_file << std::hex <<  ": 0x" << pml4E << "\n";
 
         if (pml4E != 0)
@@ -407,7 +403,7 @@ void vcpu_init_nonroot(vcpu_t *vcpu)
 {
     vcpu->dump("Thats the state dump");
     int i = 0;
-
+    /*
     while (allowWalk)
     {
         if (i == 1)
@@ -416,5 +412,15 @@ void vcpu_init_nonroot(vcpu_t *vcpu)
         }
         walkPT();
         i++;
-    }
+    }*/
+    /*std::string line;
+    std::ifstream fileStat("/proc/stat");	
+    while(std::getline(fileStat, line)){
+        std::clog<<line<<"/n";
+    }*/
+    //get IPC ins per cycle and hardcode dividing by the max IPC of the cpu
+    walkPT(vcpu);
+    
+    
+
 }
