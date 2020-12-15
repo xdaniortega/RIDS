@@ -1,8 +1,8 @@
-cmd_/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../common.o := gcc -Wp,-MD,/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../.common.o.d  -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/9/include  -I./arch/x86/include -I./arch/x86/include/generated  -I./include -I./arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I./include/uapi -I./include/generated/uapi -include ./include/linux/kconfig.h -Iubuntu/include  -include ./include/linux/compiler_types.h -D__KERNEL__ -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Wno-format-security -std=gnu89 -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -DCONFIG_X86_X32_ABI -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -DCONFIG_AS_SSSE3=1 -DCONFIG_AS_AVX=1 -DCONFIG_AS_AVX2=1 -DCONFIG_AS_AVX512=1 -DCONFIG_AS_SHA1_NI=1 -DCONFIG_AS_SHA256_NI=1 -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -fno-jump-tables -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 --param=allow-store-data-races=0 -Wframe-larger-than=1024 -fstack-protector-strong -Wno-unused-but-set-variable -Wimplicit-fallthrough -Wno-unused-const-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-var-tracking-assignments -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -flive-patching=inline-clone -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wno-stringop-truncation -Wno-array-bounds -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -fno-strict-overflow -fno-merge-all-constants -fmerge-constants -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -fmacro-prefix-map=./= -fcf-protection=none -Wno-packed-not-aligned -DKERNEL -DLINUX_KERNEL -I/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../include/ -I/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/ -I/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfelf_loader/include/  -DMODULE  -DKBUILD_BASENAME='"common"' -DKBUILD_MODNAME='"bareflank"' -c -o /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../common.o /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../common.c
+cmd_/home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../common.o := gcc -Wp,-MD,/home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../.common.o.d  -nostdinc -isystem /usr/lib/gcc/x86_64-linux-gnu/9/include  -I./arch/x86/include -I./arch/x86/include/generated  -I./include -I./arch/x86/include/uapi -I./arch/x86/include/generated/uapi -I./include/uapi -I./include/generated/uapi -include ./include/linux/kconfig.h -Iubuntu/include  -include ./include/linux/compiler_types.h -D__KERNEL__ -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Wno-format-security -std=gnu89 -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -mno-avx -m64 -falign-jumps=1 -falign-loops=1 -mno-80387 -mno-fp-ret-in-387 -mpreferred-stack-boundary=3 -mskip-rax-setup -mtune=generic -mno-red-zone -mcmodel=kernel -DCONFIG_X86_X32_ABI -DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1 -DCONFIG_AS_CFI_SECTIONS=1 -DCONFIG_AS_SSSE3=1 -DCONFIG_AS_AVX=1 -DCONFIG_AS_AVX2=1 -DCONFIG_AS_AVX512=1 -DCONFIG_AS_SHA1_NI=1 -DCONFIG_AS_SHA256_NI=1 -Wno-sign-compare -fno-asynchronous-unwind-tables -mindirect-branch=thunk-extern -mindirect-branch-register -fno-jump-tables -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 --param=allow-store-data-races=0 -Wframe-larger-than=1024 -fstack-protector-strong -Wno-unused-but-set-variable -Wimplicit-fallthrough -Wno-unused-const-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-var-tracking-assignments -pg -mrecord-mcount -mfentry -DCC_USING_FENTRY -flive-patching=inline-clone -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wno-stringop-truncation -Wno-array-bounds -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -fno-strict-overflow -fno-merge-all-constants -fmerge-constants -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -fmacro-prefix-map=./= -fcf-protection=none -Wno-packed-not-aligned -DKERNEL -DLINUX_KERNEL -I/home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../include/ -I/home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/ -I/home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfelf_loader/include/  -DMODULE  -DKBUILD_BASENAME='"common"' -DKBUILD_MODNAME='"bareflank"' -c -o /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../common.o /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../common.c
 
-source_/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../common.o := /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../common.c
+source_/home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../common.o := /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../common.c
 
-deps_/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../common.o := \
+deps_/home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../common.o := \
   include/linux/kconfig.h \
     $(wildcard include/config/cpu/big/endian.h) \
     $(wildcard include/config/booger.h) \
@@ -16,8 +16,8 @@ deps_/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/
   include/linux/compiler-gcc.h \
     $(wildcard include/config/retpoline.h) \
     $(wildcard include/config/arch/use/builtin/bswap.h) \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../include/common.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bftypes.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../include/common.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bftypes.h \
   include/linux/types.h \
     $(wildcard include/config/have/uid16.h) \
     $(wildcard include/config/uid16.h) \
@@ -40,11 +40,11 @@ deps_/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/
     $(wildcard include/config/x86/32.h) \
   arch/x86/include/uapi/asm/posix_types_64.h \
   include/uapi/asm-generic/posix_types.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bferrorcodes.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfelf_loader/include/bfelf_loader.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfdebug.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfconstants.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfarch.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bferrorcodes.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfelf_loader/include/bfelf_loader.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfdebug.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfconstants.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfarch.h \
   include/linux/printk.h \
     $(wildcard include/config/message/loglevel/default.h) \
     $(wildcard include/config/console/loglevel/default.h) \
@@ -98,15 +98,15 @@ deps_/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/
   include/linux/jump_label.h \
     $(wildcard include/config/have/arch/jump/label/relative.h) \
   arch/x86/include/asm/jump_label.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfsupport.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfexports.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfplatform.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfelf_loader/include/bfelf_loader_reloc_x64.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfdebugringinterface.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfmemory.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfthreadcontext.h \
-  /home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfdriverinterface.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfsupport.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfexports.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfplatform.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfelf_loader/include/bfelf_loader_reloc_x64.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfdebugringinterface.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfmemory.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfthreadcontext.h \
+  /home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../../../bfsdk/include/bfdriverinterface.h \
 
-/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../common.o: $(deps_/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../common.o)
+/home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../common.o: $(deps_/home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../common.o)
 
-$(deps_/home/daniel/Desktop/Bareflank_LIDS/hypervisor/bfdriver/src/platform/linux/../../common.o):
+$(deps_/home/daniel/Desktop/Bareflank_LIDS/RIDS/hypervisor/bfdriver/src/platform/linux/../../common.o):
