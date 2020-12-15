@@ -1,4 +1,23 @@
-
+//
+// Copyright (C) 2019 Assured Information Security, Inc.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 //cmake ../hypervisor/ -DDEFAULT_VMM=lids
 
 #include <vmm.h>
@@ -389,8 +408,6 @@ void vcpu_init_nonroot(vcpu_t *vcpu)
     vcpu->dump("Thats the state dump");
     int i = 0;
 
-    //bfdebug_nhex(0, vmcs_n::guest_cr3::get());
-
     while (allowWalk)
     {
         if (i == 1)
@@ -400,9 +417,6 @@ void vcpu_init_nonroot(vcpu_t *vcpu)
         walkPT();
         i++;
     }
-    //prueba1: que saca guestcr3 si nada interesante
-    //ejecutar la deteccion i guardar resultados
-
     //como controlar el uso de la cpu?
     //IDEA 1: llamar desde el userspace un programa que saque el % de uso de CPU y hacer una llamada al vm, coger esos datos
 }
