@@ -384,22 +384,37 @@ void walkPT()
 
      */
 }
+bool cr3_handler(vcpu_t *vcpu){
+    auto &d = vcpu->data<d_t &>();
+    
+    bfdebug_nhex(0,"CR3: ", vcpu->guest_cr3());
+    return true;
+}
+void getCR3(vcpu_t *vcpu){
+    //map phys addres, see unique_map logic
+    // to get cr3 kernel, watch cr3 exits, clear TLB etc
+    // 
+    vcpu->add_wrcr3_handler(cr3_handler);
+    
+}
 void vcpu_init_nonroot(vcpu_t *vcpu)
 {
-    vcpu->dump("Thats the state dump");
-    int i = 0;
+    //vcpu->dump("Thats the state dump");
+    //int i = 0;
 
     //bfdebug_nhex(0, vmcs_n::guest_cr3::get());
 
-    while (allowWalk)
-    {
-        if (i == 1)
-        {
-            allowWalk = false;
-        }
-        walkPT();
-        i++;
-    }
+    //while (allowWalk)
+    //{
+    //    if (i == 1)
+   //     {
+    //        allowWalk = false;
+    //    }
+    //    walkPT();
+    //    i++;
+    //}
+
+    getCR3(vcpu);
     //prueba1: que saca guestcr3 si nada interesante
     //ejecutar la deteccion i guardar resultados
 
