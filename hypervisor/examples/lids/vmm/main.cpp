@@ -184,6 +184,7 @@ void listESKernelCode(uint64_t entry_)
     if (!rw && !us && !xd)
     {
         ESKernel.push_back(entry_);
+        //here goes a map(key, value) where key is entry and value=[rw,us,xd]
     }
     std::clog << std::hex << entry_ << " PTE ";
     if (rw)
@@ -268,21 +269,21 @@ void walkPT()
     uint64_t *virtPml4 = reinterpret_cast<uint64_t *>(cr3Mmap->cr3Virt().data()); //casteo a puntero
     //int PML4i = x64::pml4::index(virtPml4); //same as mask ((KERNEL_START >> 39) & 0x1FF);
     int PML4i = x64::pml4::index(KERNEL_START);
-    //uint64_t pa_pml4e;
+    uint64_t pa_pml4e;
 
     for (int i = 0; i < x64::pml4::num_entries; i++)
     {
         uint64_t pml4E = virtPml4[i];
         if (PML4i == i)
         {
-            //pa_pml4e=pml4E;
+            pa_pml4e=pml4E;
             //pml4_file << "KERNEL Virt PML4e " <<std::dec << i;
             std::clog << "KERNEL INDEX ";
 
-        } /*else{
+        }else{
                 //pml4_file << "Virt PML4e "  <<std::dec << i;
-                std::clog << "Virt PML4e "  <<std::dec << i;
-            }*/
+                //std::clog << "Virt PML4e "  <<std::dec << i;
+        }
         //pml4_file << std::hex <<  ": 0x" << pml4E << "\n";
 
         if (pml4E != 0)
@@ -294,7 +295,7 @@ void walkPT()
     }
 
     //pml4_file << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
-    /*std::clog << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
+    std::clog << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
 
         std::clog<<"-----------------------------PDPT------------------------------ \n";
         //pml4_file.close();//make dump>
@@ -312,8 +313,8 @@ void walkPT()
 
                 }/*else{
                     std::clog << "Virt PDPTe "  <<std::dec << i;
-                }
-                std::clog << std::hex <<  ": 0x" << PDPTe << "\n";
+                }*/
+                //std::clog << std::hex <<  ": 0x" << PDPTe << "\n";
                 if(PDPTe!=0){
                     pa_pdptes.push_back(PDPTe);
                     std::clog << "Virt PDPTe "  <<std::dec << i;
@@ -340,7 +341,7 @@ void walkPT()
                 }
                 /*}else{
                     std::clog << "Virt PDe "  <<std::dec << i;
-                }
+                }*/
                 if(PDe!=0){
                     pa_pds.push_back(PDe);
                     std::clog << "Virt PDe "  <<std::dec << i;
@@ -364,7 +365,7 @@ void walkPT()
                     std::clog << "KERNEL INDEX: ";
                 }/*else{
                     std::clog << "Virt PTe "  <<std::dec << i;
-                }
+                }*/
                 if(PTe!=0){
                     pa_ptes.push_back(PTe);
                     std::clog << "Virt PDe "  <<std::dec << i;
@@ -405,7 +406,7 @@ void walkPT()
 }
 void vcpu_init_nonroot(vcpu_t *vcpu)
 {
-    vcpu->dump("Thats the state dump");
+    //vcpu->dump("Thats the state dump");
     int i = 0;
 
     while (allowWalk)
