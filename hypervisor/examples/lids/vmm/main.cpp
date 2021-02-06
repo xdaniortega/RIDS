@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <map>
 
 using phys_addr_t = uintptr_t; ///< Phys Address Type (as Int)
 using virt_addr_t = uintptr_t;
@@ -19,14 +20,31 @@ using entry_type = uintptr_t; ///< Entry Type
 using index_type = std::ptrdiff_t;
 
 std::vector<entry_type> ESKernel;
-std::map<entry_type,std::vector<bool>> ESKernelmap;
+std::map<uint64_t,std::vector<bool>> ESKernelmap;
+std::vector<entry_type> potentialWarnings;
+
 bool allowWalk = true; //in near future will be an object with the entire state
+bool onlyonetest=true;
+
 
 void global_init()
 {
     bfdebug_info(0, "running LIDS example");
     bfdebug_lnbr(0);
 }
+void testPotentialWarnings(uint64_t dir){
+    uint64_t dir1 = dir;
+    std::vector<bool> permis;
+    permis.push_back(true); //R/W
+    permis.push_back(true); //USER -> Potential warning due to a change in permissions
+    permis.push_back(true); //X 
+
+    ESKernelmap.insert(std::pair<uint64_t,std::vector<bool>>(dir1,permis) );
+    //we introduce hardcoded potential warning to see if detects
+
+
+}
+
 const char *hex_char_to_bin(char c)
 {
     // TODO handle default / error
@@ -167,43 +185,60 @@ void listESKernelCode(uint64_t entry_)
     bool us = x64::pt::entry::us::is_enabled(entry_); //check for kernel supervisor
     bool rw = x64::pt::entry::rw::is_enabled(entry_); // is RO
     bool xd = x64::pt::entry::xd::is_enabled(entry_); //only exectuable
-    ESKernelmap.insert(std::pair<entry,[us,rw,xd]>);
-    if (!rw && !us && !xd)
-    {   //those are kernel, exetubale and read only pages
-        ESKernel.push_back(entry_);
-        //here goes a map(key, value) where key is entry and value=[rw,us,xd]
-    }
-    std::clog << std::hex << entry_ << " PTE ";
-    if (rw)
-    {
-        std::clog << " R/W ";
-    }
-    else
-    {
-        std::clog << " RO ";
-    }
-    if (us)
-    {
-        std::clog << " US ";
-    }
-    else
-    {
-        std::clog << " S ";
-    }
-    if (xd)
-    {
-        std::clog << " X ";
-    }
-    else
-    {
-        std::clog << " NX ";
-    }
 
-    std::clog << "\n";
+    std::vector<bool> permissions;
+    permissions.push_back(us);
+    permissions.push_back(rw);
+    permissions.push_back(xd);
+
+    if(onlyonetest){
+        testPotentialWarnings(entry_);
+        onlyonetest=false;
+    }
+    if(ESKernelmap.count(entry_)>0){
+        if(ESKernelmap.at(entry_)!=permissions){
+            potentialWarnings.push_back(entry_); //for future implementations this could also save the permissions
+        }
+    }else{
+        ESKernelmap.insert(std::pair<uint64_t,std::vector<bool>>(entry_,permissions) );
+        if (!rw && !us && !xd)
+        {   //those are kernel, exetubale and read only pages
+            ESKernel.push_back(entry_);
+            //here goes a map(key, value) where key is entry and value=[rw,us,xd]
+        }
+        std::clog << std::hex << entry_ << " PTE ";
+        if (rw)
+        {
+            std::clog << " R/W ";
+        }
+        else
+        {
+            std::clog << " RO ";
+        }
+        if (us)
+        {
+            std::clog << " US ";
+        }
+        else
+        {
+            std::clog << " S ";
+        }
+        if (xd)
+        {
+            std::clog << " X ";
+        }
+        else
+        {
+            std::clog << " NX ";
+        }
+
+        std::clog << "\n";
+        }
+
 }
 void walkPT()
 {
-    //bfignored(vcpu);
+    //this function contains lots of commented code, it can be use to track each level of walk paging and see what's going on
     bfdebug_info(0, "Init CR3 walkthrough: ");
 
     entry_type entryOfMap;
@@ -224,55 +259,53 @@ void walkPT()
     bfdebug_nhex(0, "LINEAR ADDRESS:", cr3VirtAdress);
     //auto dest = (cr3VirtAdress>>12) & 0xFFFFFFFFF; //Cogera a partir de los 12 ultimos bits, i aplicara una mascara hasta los 51
 
-    //aqui aniria el while
     int nextpage=0;
-    //while(nextpage<2){
+    while(nextpage<2){
 
     
-    bfdebug_info(0, "--------------------START--------------------");
-    bfdebug_nhex(0, "START_KERNEL Linear Address:", KERNEL_START+nextpage);
+        //bfdebug_info(0, "--------------------START--------------------");
+        bfdebug_nhex(0, "START_KERNEL Linear Address:", KERNEL_START+nextpage);
 
-    std::vector<uint64_t> pa_PML4s;
-    std::vector<uint64_t> pa_pdptes;
-    std::vector<uint64_t> pa_pds;
-    std::vector<uint64_t> pa_ptes;
+        std::vector<uint64_t> pa_PML4s;
+        std::vector<uint64_t> pa_pdptes;
+        std::vector<uint64_t> pa_pds;
+        std::vector<uint64_t> pa_ptes;
 
 
-    std::clog << "-----------------------------PML4------------------------------ \n";
+        //std::clog << "-----------------------------PML4------------------------------ \n";
 
-    uint64_t pa_pml4 = cr3PhysicalAddr;
-    uint64_t *virtPml4 = reinterpret_cast<uint64_t *>(cr3Mmap->cr3Virt().data()); //casteo a puntero
-    //int PML4i = x64::pml4::index(virtPml4); //same as mask ((KERNEL_START >> 39) & 0x1FF);
-    int PML4i = x64::pml4::index(KERNEL_START);
-    uint64_t pa_pml4e;
+        uint64_t pa_pml4 = cr3PhysicalAddr;
+        uint64_t *virtPml4 = reinterpret_cast<uint64_t *>(cr3Mmap->cr3Virt().data()); //casteo a puntero
+        //int PML4i = x64::pml4::index(virtPml4); //same as mask ((KERNEL_START >> 39) & 0x1FF);
+        int PML4i = x64::pml4::index(KERNEL_START);
+        uint64_t pa_pml4e;
 
-    for (int i = 0; i < x64::pml4::num_entries; i++)
-    {
-        uint64_t pml4E = virtPml4[i];
-        if (PML4i == i)
+        for (int i = 0; i < x64::pml4::num_entries; i++)
         {
-            pa_pml4e=pml4E;
-            //pml4_file << "KERNEL Virt PML4e " <<std::dec << i;
-            std::clog << "KERNEL INDEX ";
+            uint64_t pml4E = virtPml4[i];
+            if (PML4i == i)
+            {
+                pa_pml4e=pml4E;
+                //pml4_file << "KERNEL Virt PML4e " <<std::dec << i;
+                //std::clog << "KERNEL INDEX ";
 
-        }else{
-                //pml4_file << "Virt PML4e "  <<std::dec << i;
-                //std::clog << "Virt PML4e "  <<std::dec << i;
+            }else{
+                    //pml4_file << "Virt PML4e "  <<std::dec << i;
+                    //std::clog << "Virt PML4e "  <<std::dec << i;
+            }
+            //pml4_file << std::hex <<  ": 0x" << pml4E << "\n";
+
+            if (pml4E != 0)
+            { //this condition is only for testing, it should be the same as the PML4i
+                pa_PML4s.push_back(pml4E);
+                //std::clog << "Virt PML4e " << std::dec << i;
+                //std::clog << std::hex << ": 0x" << pml4E << "\n";
+            }
         }
-        //pml4_file << std::hex <<  ": 0x" << pml4E << "\n";
 
-        if (pml4E != 0)
-        { //this condition is only for testing, it should be the same as the PML4i
-            pa_PML4s.push_back(pml4E);
-            std::clog << "Virt PML4e " << std::dec << i;
-            std::clog << std::hex << ": 0x" << pml4E << "\n";
-        }
-    }
+        //std::clog << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
 
-    //pml4_file << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
-    std::clog << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
-
-        std::clog<<"-----------------------------PDPT------------------------------ \n";
+        //std::clog<<"-----------------------------PDPT------------------------------ \n";
         //pml4_file.close();//make dump>
         
         for(uint64_t pa_pml4e : pa_PML4s ){
@@ -284,7 +317,7 @@ void walkPT()
             for(int i=0;i<x64::pdpt::num_entries;i++){
                 uint64_t PDPTe = virtPdpt[i];
                 if(PDPTi==i){
-                    std::clog << "KERNEL INDEX ";
+                    //std::clog << "KERNEL INDEX ";
 
                 }/*else{
                     std::clog << "Virt PDPTe "  <<std::dec << i;
@@ -292,16 +325,16 @@ void walkPT()
                 //std::clog << std::hex <<  ": 0x" << PDPTe << "\n";
                 if(PDPTe!=0){
                     pa_pdptes.push_back(PDPTe);
-                    std::clog << "Virt PDPTe "  <<std::dec << i;
-                    std::clog << std::hex <<  ": 0x" << PDPTe << "\n";
+                    //std::clog << "Virt PDPTe "  <<std::dec << i;
+                    //std::clog << std::hex <<  ": 0x" << PDPTe << "\n";
                 }
             }
-            std::clog<< "Target PDPT Offset is: "<< std::dec << PDPTi <<"\n";
+            //std::clog<< "Target PDPT Offset is: "<< std::dec << PDPTi <<"\n";
         }
 
         
         
-        std::clog<<"-----------------------------PD------------------------------ \n";
+        //std::clog<<"-----------------------------PD------------------------------ \n";
 
         for(uint64_t pa_pdpte : pa_pdptes ){
 
@@ -312,21 +345,21 @@ void walkPT()
             for(int i=0;i<x64::pd::num_entries;i++){
                 uint64_t PDe = virtPd[i];
                 if(PDi==i){
-                    std::clog << "KERNEL INDEX ";
+                    //std::clog << "KERNEL INDEX ";
                 }
                 /*}else{
                     std::clog << "Virt PDe "  <<std::dec << i;
                 }*/
                 if(PDe!=0){
                     pa_pds.push_back(PDe);
-                    std::clog << "Virt PDe "  <<std::dec << i;
-                    std::clog << std::hex <<  ": 0x" << PDe << "\n";
+                    //std::clog << "Virt PDe "  <<std::dec << i;
+                    //std::clog << std::hex <<  ": 0x" << PDe << "\n";
                 }
 
                
             }
 
-            std::clog<< "Target PD Offset is: "<< std::dec << PDi <<"\n";
+            //std::clog<< "Target PD Offset is: "<< std::dec << PDi <<"\n";
         }
 
         for(uint64_t pa_pde : pa_pds ){
@@ -337,19 +370,19 @@ void walkPT()
             for(int i=0;i<x64::pt::num_entries;i++){
                 uint64_t PTe = virtPt[i];
                 if(PTi==i){
-                    std::clog << "KERNEL INDEX: ";
+                    //std::clog << "KERNEL INDEX: ";
                 }/*else{
                     std::clog << "Virt PTe "  <<std::dec << i;
                 }*/
                 if(PTe!=0){
                     pa_ptes.push_back(PTe);
-                    std::clog << "Virt PDe "  <<std::dec << i;
-                    std::clog << std::hex <<  ": 0x" << PTe << "\n";
+                    //std::clog << "Virt PDe "  <<std::dec << i;
+                    //std::clog << std::hex <<  ": 0x" << PTe << "\n";
 
                 }
             }
 
-            std::clog<< "Target PT Offset is: "<< std::dec << PTi <<"\n";
+            //std::clog<< "Target PT Offset is: "<< std::dec << PTi <<"\n";
         }
 
         for (uint64_t pte : pa_ptes){
@@ -361,28 +394,27 @@ void walkPT()
         
 
         nextpage++;
-        //bfdebug_ndec(0,"Counter",counter);
-        bfdebug_info(0,"--------------------FINISH--------------------");
 
-        //printPTE(entryPte.first);
-        //KERNEL_START+=4095; //FFF that is offset page
-        //counter++;
+        //bfdebug_info(0,"--------------------FINISH--------------------");
+
     
-    //}
-    
-    /*for(long i=0;i< ESKernel.size();i++)
-    {
-        bfdebug_nhex(0,"ES Page: ",ESKernel[i]);
     }
-    bfdebug_ndec(0,"Executable Suppervisor PTE's: ", ESKernel.size());
+    
+}
 
-     */
+void printPotentialWarnings(){
+    std::clog << "Potential Warnings: "<< std::endl ;
+
+    for(uintptr_t warning : potentialWarnings ){
+        std::clog << std::hex << warning;
+    }
+
 }
 bool cr3_handler(vcpu_t *vcpu){
-    auto &d = vcpu->data<d_t &>();
+    /*auto &d = vcpu->data<d_t &>();
     
     bfdebug_nhex(0,"CR3: ", vcpu->guest_cr3());
-    return true;
+    return true;*/
 }
 void getCR3(vcpu_t *vcpu){
     //map phys addres, see unique_map logic
@@ -393,14 +425,11 @@ void getCR3(vcpu_t *vcpu){
 }
 void vcpu_init_nonroot(vcpu_t *vcpu)
 {
-    //vcpu->dump("Thats the state dump");
     int i = 0;
-
-    //bfdebug_nhex(0, vmcs_n::guest_cr3::get());
 
     while (allowWalk)
     {
-       if (i == 1)
+       if (i == 0)
         {
            allowWalk = false;
         }
@@ -408,10 +437,6 @@ void vcpu_init_nonroot(vcpu_t *vcpu)
        i++;
     }
 
+    printPotentialWarnings();
     //getCR3(vcpu);
-    //prueba1: que saca guestcr3 si nada interesante
-    //ejecutar la deteccion i guardar resultados
-
-    //como controlar el uso de la cpu?
-    //IDEA 1: llamar desde el userspace un programa que saque el % de uso de CPU y hacer una llamada al vm, coger esos datos
 }
