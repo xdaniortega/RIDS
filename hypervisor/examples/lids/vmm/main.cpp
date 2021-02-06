@@ -19,6 +19,7 @@ using entry_type = uintptr_t; ///< Entry Type
 using index_type = std::ptrdiff_t;
 
 std::vector<entry_type> ESKernel;
+std::map<entry_type,std::vector<bool>> ESKernelmap;
 bool allowWalk = true; //in near future will be an object with the entire state
 
 void global_init()
@@ -154,6 +155,10 @@ void printPTE(entry_type entryOfMap_)
     {
         bfdebug_info(0, "NOT GLOBAL");
     }
+
+    //Here we can do analysis or even save all permissions, now only restore Accesed bit
+    x64::pt::entry::accessed::enable(entryOfMap_);
+
 }
 
 void listESKernelCode(uint64_t entry_)
@@ -162,9 +167,11 @@ void listESKernelCode(uint64_t entry_)
     bool us = x64::pt::entry::us::is_enabled(entry_); //check for kernel supervisor
     bool rw = x64::pt::entry::rw::is_enabled(entry_); // is RO
     bool xd = x64::pt::entry::xd::is_enabled(entry_); //only exectuable
+    ESKernelmap.insert(std::pair<entry,[us,rw,xd]>);
     if (!rw && !us && !xd)
-    {
+    {   //those are kernel, exetubale and read only pages
         ESKernel.push_back(entry_);
+        //here goes a map(key, value) where key is entry and value=[rw,us,xd]
     }
     std::clog << std::hex << entry_ << " PTE ";
     if (rw)
@@ -202,10 +209,8 @@ void walkPT()
     entry_type entryOfMap;
     virt_addr_t pgdPointer;
 
-    //    constexpr const auto KERNEL_START = 0xFFFF800000000000;
     uint64_t KERNEL_START = 0xFFFF800000000000;
     uint64_t KERNEL_FINSH = 0xFFFFc87fffffffff;
-    //auto KERNEL_START = 0x1000800000000000;
     mmap *cr3Mmap = vmm_cr3();
     uintptr_t cr3PhysicalAddr = cr3Mmap->cr3();
     uint64_t cr3_Phys = reinterpret_cast<uint64_t>(cr3PhysicalAddr);
@@ -219,51 +224,41 @@ void walkPT()
     bfdebug_nhex(0, "LINEAR ADDRESS:", cr3VirtAdress);
     //auto dest = (cr3VirtAdress>>12) & 0xFFFFFFFFF; //Cogera a partir de los 12 ultimos bits, i aplicara una mascara hasta los 51
 
-    //CR3 stores phys direction where pgd is
-    //but now always are equivalent:
-    //At least since Linux 2.6, pgd and cr3 may or may not be equivalent depending on two factors:
-    //Whether pgd is larger than the virtual base address of the kernel image __START_KERNEL_map.
-    //phys_base, which is the difference between the compile-time physical base address of the kernel image and the run-time physical base address of the image. If the image has been relocated, phys_base would not be zero.
-    //The translation process is performed by a function called __phys_addr which you can refer to to follow the following examples.
-    //Source: https://stackoverflow.com/questions/54973030/difference-between-cr3-value-and-pgd-t
+    //aqui aniria el while
+    int nextpage=0;
+    //while(nextpage<2){
 
-    //while(counter<1000){
+    
     bfdebug_info(0, "--------------------START--------------------");
-    bfdebug_nhex(0, "START_KERNEL Linear Address:", KERNEL_START);
+    bfdebug_nhex(0, "START_KERNEL Linear Address:", KERNEL_START+nextpage);
 
     std::vector<uint64_t> pa_PML4s;
     std::vector<uint64_t> pa_pdptes;
     std::vector<uint64_t> pa_pds;
     std::vector<uint64_t> pa_ptes;
 
-    //phys_addr_t pa_pml4e = (cr3PhysicalAddr & 0xFFFFFFFFFF000) + ((KERNEL_START >> 39) & 0x1FF); //Where 1FF is 9 bits (47:39)
-    //acces content of phys to get virt
-    // std::fstream pml4_file;
-    //pml4_file.open("/home/daniel/Desktop/Bareflank_LIDS/pml4Dump.txt");
-    /*if(!pml4_file){
-            std::clog<<"FILE NOT CREATED";
-        }*/
+
     std::clog << "-----------------------------PML4------------------------------ \n";
 
     uint64_t pa_pml4 = cr3PhysicalAddr;
     uint64_t *virtPml4 = reinterpret_cast<uint64_t *>(cr3Mmap->cr3Virt().data()); //casteo a puntero
     //int PML4i = x64::pml4::index(virtPml4); //same as mask ((KERNEL_START >> 39) & 0x1FF);
     int PML4i = x64::pml4::index(KERNEL_START);
-    //uint64_t pa_pml4e;
+    uint64_t pa_pml4e;
 
     for (int i = 0; i < x64::pml4::num_entries; i++)
     {
         uint64_t pml4E = virtPml4[i];
         if (PML4i == i)
         {
-            //pa_pml4e=pml4E;
+            pa_pml4e=pml4E;
             //pml4_file << "KERNEL Virt PML4e " <<std::dec << i;
             std::clog << "KERNEL INDEX ";
 
-        } /*else{
+        }else{
                 //pml4_file << "Virt PML4e "  <<std::dec << i;
-                std::clog << "Virt PML4e "  <<std::dec << i;
-            }*/
+                //std::clog << "Virt PML4e "  <<std::dec << i;
+        }
         //pml4_file << std::hex <<  ": 0x" << pml4E << "\n";
 
         if (pml4E != 0)
@@ -275,7 +270,7 @@ void walkPT()
     }
 
     //pml4_file << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
-    /*std::clog << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
+    std::clog << "Target PML4 Offset is: "<< std::dec << PML4i <<"\n";
 
         std::clog<<"-----------------------------PDPT------------------------------ \n";
         //pml4_file.close();//make dump>
@@ -293,8 +288,8 @@ void walkPT()
 
                 }/*else{
                     std::clog << "Virt PDPTe "  <<std::dec << i;
-                }
-                std::clog << std::hex <<  ": 0x" << PDPTe << "\n";
+                }*/
+                //std::clog << std::hex <<  ": 0x" << PDPTe << "\n";
                 if(PDPTe!=0){
                     pa_pdptes.push_back(PDPTe);
                     std::clog << "Virt PDPTe "  <<std::dec << i;
@@ -321,7 +316,7 @@ void walkPT()
                 }
                 /*}else{
                     std::clog << "Virt PDe "  <<std::dec << i;
-                }
+                }*/
                 if(PDe!=0){
                     pa_pds.push_back(PDe);
                     std::clog << "Virt PDe "  <<std::dec << i;
@@ -345,7 +340,7 @@ void walkPT()
                     std::clog << "KERNEL INDEX: ";
                 }/*else{
                     std::clog << "Virt PTe "  <<std::dec << i;
-                }
+                }*/
                 if(PTe!=0){
                     pa_ptes.push_back(PTe);
                     std::clog << "Virt PDe "  <<std::dec << i;
@@ -361,12 +356,11 @@ void walkPT()
             //printPTE(pte);
             listESKernelCode(pte); //will save X,RO, supervisor
         }
-        //listESKernelCode(PTe);
 
 
         
 
-
+        nextpage++;
         //bfdebug_ndec(0,"Counter",counter);
         bfdebug_info(0,"--------------------FINISH--------------------");
 
@@ -400,21 +394,21 @@ void getCR3(vcpu_t *vcpu){
 void vcpu_init_nonroot(vcpu_t *vcpu)
 {
     //vcpu->dump("Thats the state dump");
-    //int i = 0;
+    int i = 0;
 
     //bfdebug_nhex(0, vmcs_n::guest_cr3::get());
 
-    //while (allowWalk)
-    //{
-    //    if (i == 1)
-   //     {
-    //        allowWalk = false;
-    //    }
-    //    walkPT();
-    //    i++;
-    //}
+    while (allowWalk)
+    {
+       if (i == 1)
+        {
+           allowWalk = false;
+        }
+        walkPT();
+       i++;
+    }
 
-    getCR3(vcpu);
+    //getCR3(vcpu);
     //prueba1: que saca guestcr3 si nada interesante
     //ejecutar la deteccion i guardar resultados
 
